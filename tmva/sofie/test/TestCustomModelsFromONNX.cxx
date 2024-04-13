@@ -283,6 +283,9 @@
 #include "RangeInt_FromONNX.hxx"
 #include "input_models/references/RangeInt.ref.hxx"
 
+#include "TopK_FromONNX.hxx"
+#include "input_models/references/TopK.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2695,3 +2698,35 @@ TEST(ONNX, RangeInt) {
    }
 }
 
+
+TEST(ONNX, TopK) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> input({5.0, 2.0, 9.0, 1.0, 7.0, 3.0, 8.0, 4.0, 6.0});
+   TMVA_SOFIE_TopK::Session s("TopK_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   std::vector<float> output_values = output[0];
+   std::vector<float> output_indices = output[1];
+
+   // Checking output size
+   EXPECT_EQ(output_values.size(), sizeof(TopK_ExpectedOutput::outputvalues) / sizeof(float));
+
+   float *correct_values = TopK_ExpectedOutput::outputvalues;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output_values.size(); ++i) {
+      EXPECT_LE(std::abs(output_values[i] - correct_values[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(output_indices.size(), sizeof(TopK_ExpectedOutput::outputindices) / sizeof(float));
+
+   float *correct_indices = TopK_ExpectedOutput::outputindices;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output_indices[i] - correct_indices[i]), TOLERANCE);
+   }
+}
